@@ -3,12 +3,17 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 h-screen">
-			<h1 className="text-4xl">Cleaning Service Management System</h1>
+			<h1 className="text-6xl">Hassle-Free Cleaning Services</h1>
 			<p>
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed molestie,
-				neque vel tincidunt tincidunt.
+				Professional, reliable, and thorough cleaning services for your home or
+				business. We make it sparkle so you don&apos;t have to.
 			</p>
-			<Button size={"lg"}>Get Started</Button>
+			<div className="flex items-center justify-center gap-4">
+				<Button size={"lg"}>Get Started</Button>
+				<Button size={"lg"} variant={"outline"}>
+					View Services
+				</Button>
+			</div>
 		</div>
 	);
 }

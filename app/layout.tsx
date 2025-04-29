@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Maven_Pro } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const mavenPro = Maven_Pro({
 	variable: "--font-maven-pro",
@@ -19,7 +22,15 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={`${mavenPro.variable} antialiased`}>{children}</body>
+			<body
+				className={`${mavenPro.variable} antialiased min-h-screen flex flex-col`}
+				suppressHydrationWarning={true}
+			>
+				<Navbar />
+				<main className="flex-grow">{children}</main>
+				<Footer />
+				<Toaster richColors />
+			</body>
 		</html>
 	);
 }

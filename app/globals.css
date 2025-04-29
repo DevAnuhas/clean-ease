@@ -1,5 +1,35 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+
+@keyframes enter {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes exit {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+}
+
+@layer utilities {
+	.animate-fade-in {
+		animation: enter 0.2s ease-out;
+	}
+	.animate-fade-out {
+		animation: exit 0.2s ease-in;
+	}
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -126,4 +156,8 @@
 	h6 {
 		@apply font-bold tracking-tight;
 	}
+}
+
+a {
+	@apply text-muted-foreground underline-offset-4 hover:underline hover:text-primary duration-100;
 }
