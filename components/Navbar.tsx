@@ -1,23 +1,16 @@
-"use client";
-
 import Link from "next/link";
-import { Button } from "./ui/button";
-import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { Button } from "@/components/ui/button";
+import SignOutButton from "@/components/SignOutButton";
 
-const Navbar = () => {
-	const user = null;
-	const isAdmin = false;
-	const location = usePathname();
-	const navigate = useRouter().push;
+const Navbar = async () => {
+	const supabase = await createClient();
 
-	const handleLogout = () => {
-		console.log("Logout");
-		navigate("/");
-	};
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
 
-	const isActive = (path: string) => {
-		return location === path;
-	};
+	const isAdmin = user?.app_metadata.role === "admin";
 
 	return (
 		<header className="bg-white shadow-sm py-4">
@@ -31,46 +24,18 @@ const Navbar = () => {
 				<div className="flex items-center gap-4">
 					{user ? (
 						<>
+							<SignOutButton />
 							<div className="hidden md:flex items-center gap-6">
 								{isAdmin ? (
-									<Link
-										href="/admin"
-										className={`text-sm font-medium ${
-											isActive("/admin")
-												? "text-primary"
-												: "text-gray-600 hover:text-primary"
-										}`}
-									>
-										Admin Panel
+									<Link href="/admin">
+										<Button>Admin Panel</Button>
 									</Link>
 								) : (
-									<>
-										<Link
-											href="/dashboard"
-											className={`text-sm font-medium ${
-												isActive("/dashboard")
-													? "text-primary"
-													: "text-gray-600 hover:text-primary"
-											}`}
-										>
-											Dashboard
-										</Link>
-										<Link
-											href="/booking"
-											className={`text-sm font-medium ${
-												isActive("/booking")
-													? "text-primary"
-													: "text-gray-600 hover:text-primary"
-											}`}
-										>
-											New Booking
-										</Link>
-									</>
+									<Link href="/dashboard">
+										<Button>Dashboard</Button>
+									</Link>
 								)}
 							</div>
-							<Button onClick={handleLogout} variant="outline">
-								Logout
-							</Button>
 						</>
 					) : (
 						<>
