@@ -13,7 +13,7 @@ import {
 	DialogDescription,
 } from "@/components/ui/dialog";
 import { BookingFormFields } from "./BookingFormFields";
-import type { Service } from "@/types";
+import type { Service, Booking } from "@/types";
 import { getServices, createBooking } from "@/lib/api-client";
 import { bookingFormSchema, type BookingFormValues } from "@/lib/form-schemas";
 

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
+	DialogClose,
 	DialogHeader,
 	DialogFooter,
 	DialogTitle,
@@ -90,6 +91,9 @@ export default function EditBookingForm({
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 					<BookingFormFields form={form} services={services} />
 					<DialogFooter>
+						<DialogClose asChild>
+							<Button variant="outline">Cancel</Button>
+						</DialogClose>
 						<Button type="submit" disabled={form.formState.isSubmitting}>
 							{form.formState.isSubmitting ? "Saving..." : "Save Changes"}
 						</Button>

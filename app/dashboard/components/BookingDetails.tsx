@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import {
+	DialogClose,
 	DialogHeader,
 	DialogTitle,
 	DialogDescription,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { Booking, Service } from "@/types";
+import type { Booking } from "@/types";
 import { useAdmin } from "@/lib/use-admin";
 import { getBooking, getServices, updateBooking } from "@/lib/api-client";
 import { useEffect, useState } from "react";
@@ -17,28 +18,27 @@ import { useRouter } from "next/navigation";
 
 interface BookingDetailsProps {
 	bookingId: string;
-	onClose: () => void;
-	onUpdateStatus?: (id: string, status: Booking["status"]) => void;
+	onUpdateStatus: (
+		id: string,
+		status: "pending" | "confirmed" | "completed" | "cancelled"
+	) => void;
 }
 
-const BookingDetails = ({
-	bookingId,
-	onClose,
-	onUpdateStatus,
-}: BookingDetailsProps) => {
+const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 	const [booking, setBooking] = useState<Booking | null>(null);
-	const [service, setService] = useState<Service[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const { isAdmin } = useAdmin();
 	const router = useRouter();
 	const [isUpdating, setIsUpdating] = useState(false);
 
-	const getStatusColor = (status: Booking["status"]) => {
+	const getStatusColor = (
+		status: Booking["status"]
+	): "default" | "destructive" | "outline" | "secondary" | null => {
 		switch (status) {
 			case "confirmed":
-				return "success";
+				return "default";
 			case "pending":
-				return "warning";
+				return "secondary";
 			case "completed":
 				return "default";
 			case "cancelled":
@@ -59,19 +59,15 @@ const BookingDetails = ({
 				getServices(),
 			]);
 
-			// Find the matching service for this booking
 			const bookingService = servicesData.find(
 				(s) => s.id === bookingData.service_id
 			);
 
-			// Update booking with the full service details
 			setBooking({
 				...bookingData,
-				service: bookingService || null,
+				service: bookingService ?? undefined,
 			});
-			setService(servicesData);
 		} catch (error) {
-			setError("Failed to load booking data");
 			console.error("Error loading data:", error);
 		} finally {
 			setIsLoading(false);
@@ -119,7 +115,7 @@ const BookingDetails = ({
 					<div>
 						<h3 className="text-sm font-medium text-gray-500">Status</h3>
 						<div className="mt-1">
-							<Badge variant={getStatusColor(booking.status) as any}>
+							<Badge variant={getStatusColor(booking.status)}>
 								{booking.status.charAt(0).toUpperCase() +
 									booking.status.slice(1)}
 							</Badge>
@@ -227,9 +223,9 @@ const BookingDetails = ({
 			</div>
 
 			<DialogFooter>
-				<Button variant="outline" onClick={onClose}>
-					Close
-				</Button>
+				<DialogClose asChild>
+					<Button variant="outline">Close</Button>
+				</DialogClose>
 			</DialogFooter>
 		</>
 	);
