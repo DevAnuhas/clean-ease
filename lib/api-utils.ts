@@ -1,37 +1,23 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { ZodError, type ZodSchema } from "zod";
-import type { ErrorResponse } from "./types";
+import { ValidationError } from "@/lib/errors";
 
 export async function validateRequest<T>(
 	req: NextRequest,
 	schema: ZodSchema<T>
-): Promise<
-	{ success: true; data: T } | { success: false; error: ErrorResponse }
-> {
+): Promise<T> {
 	try {
 		const body = await req.json();
-		const data = schema.parse(body);
-		return { success: true, data };
+		return schema.parse(body);
 	} catch (error) {
 		if (error instanceof ZodError) {
-			return {
-				success: false,
-				error: {
-					error: error.errors
-						.map((e) => `${e.path.join(".")}: ${e.message}`)
-						.join(", "),
-					status: 400,
-				},
-			};
+			const message = error.errors
+				.map((e) => `${e.path.join(".")}: ${e.message}`)
+				.join(", ");
+			throw new ValidationError(message);
 		}
 
-		return {
-			success: false,
-			error: {
-				error: "Invalid request body",
-				status: 400,
-			},
-		};
+		throw new ValidationError("Invalid request body");
 	}
 }
 

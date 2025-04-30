@@ -1,132 +1,118 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { bookingSchema } from "@/lib/types";
-import { validateRequest, errorResponse } from "@/lib/api-utils";
-import { requireUser } from "@/lib/auth";
+import { validateRequest } from "@/lib/api-utils";
+import { withErrorHandler, withAuth } from "@/middleware/error-handler";
+import { DatabaseError, NotFoundError, ForbiddenError } from "@/lib/errors";
 
 // GET /api/bookings/[id] - Get a specific booking
-export async function GET(
+async function getBooking(
 	req: NextRequest,
 	{ params }: { params: { id: string } }
 ) {
-	try {
-		const user = await requireUser();
-		const supabase = await createClient();
+	const supabase = await createClient();
 
-		const { data, error } = await supabase
-			.from("bookings")
-			.select("*, services(*)")
-			.eq("id", params.id)
-			.eq("user_id", user.id)
-			.single();
-
-		if (error) {
-			return errorResponse(
-				error.message,
-				error.code === "PGRST116" ? 404 : 500
-			);
-		}
-
-		return NextResponse.json(data);
-	} catch (error) {
-		console.error("Error fetching booking:", error);
-		return errorResponse("Failed to fetch booking", 500);
+	const userId = req.headers.get("x-user-id");
+	if (userId === null) {
+		throw new ForbiddenError("User not authenticated");
 	}
+
+	const { data, error } = await supabase
+		.from("bookings")
+		.select("*, services(*)")
+		.eq("id", params.id)
+		.eq("user_id", userId)
+		.single();
+
+	if (error) {
+		if (error.code === "PGRST116") {
+			throw new NotFoundError("Booking not found");
+		}
+		throw new DatabaseError(error.message);
+	}
+
+	return NextResponse.json(data);
 }
 
 // PUT /api/bookings/[id] - Update a booking
-export async function PUT(
+async function updateBooking(
 	req: NextRequest,
 	{ params }: { params: { id: string } }
 ) {
-	try {
-		const user = await requireUser();
-		const validation = await validateRequest(req, bookingSchema);
+	const userId = req.headers.get("x-user-id");
+	const bookingData = await validateRequest(req, bookingSchema);
+	const supabase = await createClient();
 
-		if (!validation.success) {
-			return errorResponse(validation.error.error, validation.error.status);
-		}
+	// Check if the booking exists and belongs to the user
+	const { data: existingBooking, error: fetchError } = await supabase
+		.from("bookings")
+		.select("id, user_id")
+		.eq("id", params.id)
+		.single();
 
-		const bookingData = validation.data;
-		const supabase = await createClient();
-
-		// Check if the booking exists and belongs to the user
-		const { data: existingBooking, error: fetchError } = await supabase
-			.from("bookings")
-			.select("id, user_id")
-			.eq("id", params.id)
-			.single();
-
-		if (fetchError || !existingBooking) {
-			return errorResponse("Booking not found", 404);
-		}
-
-		if (existingBooking.user_id !== user.id) {
-			return errorResponse(
-				"You do not have permission to update this booking",
-				403
-			);
-		}
-
-		// Update the booking
-		const { data, error } = await supabase
-			.from("bookings")
-			.update(bookingData)
-			.eq("id", params.id)
-			.select()
-			.single();
-
-		if (error) {
-			return errorResponse(error.message, 500);
-		}
-
-		return NextResponse.json(data);
-	} catch (error) {
-		console.error("Error updating booking:", error);
-		return errorResponse("Failed to update booking", 500);
+	if (fetchError) {
+		throw new NotFoundError("Booking not found");
 	}
+
+	if (existingBooking.user_id !== userId) {
+		throw new ForbiddenError(
+			"You do not have permission to update this booking"
+		);
+	}
+
+	// Update the booking
+	const { data, error } = await supabase
+		.from("bookings")
+		.update(bookingData)
+		.eq("id", params.id)
+		.select()
+		.single();
+
+	if (error) {
+		throw new DatabaseError(error.message);
+	}
+
+	return NextResponse.json(data);
 }
 
 // DELETE /api/bookings/[id] - Delete a booking
-export async function DELETE(
+async function deleteBooking(
 	req: NextRequest,
 	{ params }: { params: { id: string } }
 ) {
-	try {
-		const user = await requireUser();
-		const supabase = await createClient();
+	const userId = req.headers.get("x-user-id");
+	const supabase = await createClient();
 
-		// Check if the booking exists and belongs to the user
-		const { data: existingBooking, error: fetchError } = await supabase
-			.from("bookings")
-			.select("id, user_id")
-			.eq("id", params.id)
-			.single();
+	// Check if the booking exists and belongs to the user
+	const { data: existingBooking, error: fetchError } = await supabase
+		.from("bookings")
+		.select("id, user_id")
+		.eq("id", params.id)
+		.single();
 
-		if (fetchError || !existingBooking) {
-			return errorResponse("Booking not found", 404);
-		}
-
-		if (existingBooking.user_id !== user.id) {
-			return errorResponse(
-				"You do not have permission to delete this booking",
-				403
-			);
-		}
-
-		// Delete the booking
-		const { error } = await supabase
-			.from("bookings")
-			.delete()
-			.eq("id", params.id);
-
-		if (error) {
-			return errorResponse(error.message, 500);
-		}
-
-		return new NextResponse(null, { status: 204 });
-	} catch (error) {
-		console.error("Error deleting booking:", error);
-		return errorResponse("Failed to delete booking", 500);
+	if (fetchError) {
+		throw new NotFoundError("Booking not found");
 	}
+
+	if (existingBooking.user_id !== userId) {
+		throw new ForbiddenError(
+			"You do not have permission to delete this booking"
+		);
+	}
+
+	// Delete the booking
+	const { error } = await supabase
+		.from("bookings")
+		.delete()
+		.eq("id", params.id);
+
+	if (error) {
+		throw new DatabaseError(error.message);
+	}
+
+	return new NextResponse(null, { status: 204 });
 }
+
+export const GET = withErrorHandler(withAuth(getBooking));
+export const PUT = withErrorHandler(withAuth(updateBooking));
+export const DELETE = withErrorHandler(withAuth(deleteBooking));
