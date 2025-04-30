@@ -8,8 +8,9 @@ import { DatabaseError, NotFoundError, ForbiddenError } from "@/lib/errors";
 // GET /api/bookings/[id] - Get a specific booking
 async function getBooking(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
+	const { id } = await Promise.resolve(context.params);
 	const supabase = await createClient();
 
 	const userId = req.headers.get("x-user-id");
@@ -20,7 +21,7 @@ async function getBooking(
 	const { data, error } = await supabase
 		.from("bookings")
 		.select("*, services(*)")
-		.eq("id", params.id)
+		.eq("id", id)
 		.eq("user_id", userId)
 		.single();
 
@@ -37,8 +38,9 @@ async function getBooking(
 // PUT /api/bookings/[id] - Update a booking
 async function updateBooking(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
+	const { id } = await Promise.resolve(context.params);
 	const userId = req.headers.get("x-user-id");
 	const bookingData = await validateRequest(req, bookingSchema);
 	const supabase = await createClient();
@@ -47,7 +49,7 @@ async function updateBooking(
 	const { data: existingBooking, error: fetchError } = await supabase
 		.from("bookings")
 		.select("id, user_id")
-		.eq("id", params.id)
+		.eq("id", id)
 		.single();
 
 	if (fetchError) {
@@ -64,7 +66,7 @@ async function updateBooking(
 	const { data, error } = await supabase
 		.from("bookings")
 		.update(bookingData)
-		.eq("id", params.id)
+		.eq("id", id)
 		.select()
 		.single();
 
@@ -78,8 +80,9 @@ async function updateBooking(
 // DELETE /api/bookings/[id] - Delete a booking
 async function deleteBooking(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
+	const { id } = await Promise.resolve(context.params);
 	const userId = req.headers.get("x-user-id");
 	const supabase = await createClient();
 
@@ -87,7 +90,7 @@ async function deleteBooking(
 	const { data: existingBooking, error: fetchError } = await supabase
 		.from("bookings")
 		.select("id, user_id")
-		.eq("id", params.id)
+		.eq("id", id)
 		.single();
 
 	if (fetchError) {
@@ -101,10 +104,7 @@ async function deleteBooking(
 	}
 
 	// Delete the booking
-	const { error } = await supabase
-		.from("bookings")
-		.delete()
-		.eq("id", params.id);
+	const { error } = await supabase.from("bookings").delete().eq("id", id);
 
 	if (error) {
 		throw new DatabaseError(error.message);
