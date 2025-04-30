@@ -4,9 +4,9 @@ import { serviceSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
 import { requireAdmin } from "@/lib/auth";
 
-// GET /api/services/[id] - Get a service by ID
+// GET /api/services/[id] - Get a specific service
 export async function GET(
-	request: NextRequest,
+	req: NextRequest,
 	context: { params: { id: string } }
 ) {
 	try {
@@ -35,7 +35,7 @@ export async function GET(
 // PUT /api/services/[id] - Update a service (admin only)
 export async function PUT(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
 		// Check if user is admin
@@ -54,7 +54,7 @@ export async function PUT(
 		const { data: existingService, error: fetchError } = await supabase
 			.from("services")
 			.select("id")
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.single();
 
 		if (fetchError || !existingService) {
@@ -65,7 +65,7 @@ export async function PUT(
 		const { data, error } = await supabase
 			.from("services")
 			.update(serviceData)
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.select()
 			.single();
 
@@ -83,7 +83,7 @@ export async function PUT(
 // DELETE /api/services/[id] - Delete a service (admin only)
 export async function DELETE(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
 		// Check if user is admin
@@ -95,7 +95,7 @@ export async function DELETE(
 		const { data: existingService, error: fetchError } = await supabase
 			.from("services")
 			.select("id")
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.single();
 
 		if (fetchError || !existingService) {
@@ -106,7 +106,7 @@ export async function DELETE(
 		const { data: bookingsWithService, error: bookingsError } = await supabase
 			.from("bookings")
 			.select("id")
-			.eq("service_id", params.id)
+			.eq("service_id", context.params.id)
 			.limit(1);
 
 		if (
@@ -124,7 +124,7 @@ export async function DELETE(
 		const { error } = await supabase
 			.from("services")
 			.delete()
-			.eq("id", params.id);
+			.eq("id", context.params.id);
 
 		if (error) {
 			return errorResponse(error.message, 500);

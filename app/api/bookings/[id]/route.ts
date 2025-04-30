@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 
 // GET /api/bookings/[id] - Get a specific booking
 export async function GET(
-	request: NextRequest,
+	req: NextRequest,
 	context: { params: { id: string } }
 ) {
 	try {
@@ -37,7 +37,7 @@ export async function GET(
 // PUT /api/bookings/[id] - Update a booking
 export async function PUT(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
 		const user = await requireUser();
@@ -54,7 +54,7 @@ export async function PUT(
 		const { data: existingBooking, error: fetchError } = await supabase
 			.from("bookings")
 			.select("id, user_id")
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.single();
 
 		if (fetchError || !existingBooking) {
@@ -72,7 +72,7 @@ export async function PUT(
 		const { data, error } = await supabase
 			.from("bookings")
 			.update(bookingData)
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.select()
 			.single();
 
@@ -90,7 +90,7 @@ export async function PUT(
 // DELETE /api/bookings/[id] - Delete a booking
 export async function DELETE(
 	req: NextRequest,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
 		const user = await requireUser();
@@ -100,7 +100,7 @@ export async function DELETE(
 		const { data: existingBooking, error: fetchError } = await supabase
 			.from("bookings")
 			.select("id, user_id")
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.single();
 
 		if (fetchError || !existingBooking) {
@@ -118,7 +118,7 @@ export async function DELETE(
 		const { error } = await supabase
 			.from("bookings")
 			.delete()
-			.eq("id", params.id);
+			.eq("id", context.params.id);
 
 		if (error) {
 			return errorResponse(error.message, 500);
