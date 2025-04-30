@@ -129,5 +129,22 @@
 }
 
 a {
-	@apply text-muted-foreground underline-offset-4 hover:underline hover:text-primary duration-100;
+	@apply text-primary underline-offset-4 hover:underline duration-100 transition-colors;
+}
+
+.dialog-content {
+	transition: height 0.3s ease;
+	height: auto;
+	overflow: hidden;
+}
+
+.dialog-content[data-state="open"] {
+	opacity: 1;
+	transform: scale(1);
+}
+
+.dialog-content[data-state="closed"] {
+	opacity: 0;
+	height: 0;
+	transform: scale(0);
 }

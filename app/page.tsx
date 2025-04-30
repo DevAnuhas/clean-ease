@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -9,7 +10,9 @@ export default function Home() {
 				business. We make it sparkle so you don&apos;t have to.
 			</p>
 			<div className="flex items-center justify-center gap-4">
-				<Button size={"lg"}>Get Started</Button>
+				<Link href="/dashboard">
+					<Button size={"lg"}>Get Started</Button>
+				</Link>
 				<Button size={"lg"} variant={"outline"}>
 					View Services
 				</Button>

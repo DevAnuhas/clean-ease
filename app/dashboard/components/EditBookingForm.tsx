@@ -39,7 +39,7 @@ export default function EditBookingForm({
 
 	useEffect(() => {
 		loadData();
-	});
+	}, [bookingId]);
 
 	async function loadData() {
 		try {
@@ -60,8 +60,8 @@ export default function EditBookingForm({
 				),
 				service_id: bookingData.service_id,
 			});
-		} catch {
-			setError("Failed to load booking data");
+		} catch (error) {
+			setError("Error loading data: " + error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -80,7 +80,7 @@ export default function EditBookingForm({
 	if (!booking) return <div>Booking not found</div>;
 
 	return (
-		<>
+		<div className="animate-in fade-in zoom-in-95 duration-400 space-y-4">
 			<DialogHeader>
 				<DialogTitle>Edit Booking</DialogTitle>
 				<DialogDescription>Update the booking details</DialogDescription>
@@ -101,6 +101,6 @@ export default function EditBookingForm({
 					</DialogFooter>
 				</form>
 			</Form>
-		</>
+		</div>
 	);
 }

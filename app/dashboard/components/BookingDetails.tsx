@@ -28,6 +28,7 @@ interface BookingDetailsProps {
 const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 	const [booking, setBooking] = useState<Booking | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const { isAdmin } = useAdmin();
 	const router = useRouter();
 	const [isUpdating, setIsUpdating] = useState(false);
@@ -69,7 +70,7 @@ const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 				service: bookingService ?? undefined,
 			});
 		} catch (error) {
-			console.error("Error loading data:", error);
+			setError("Error loading data: " + error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -96,13 +97,15 @@ const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 	};
 
 	return (
-		<>
+		<div className="animate-in fade-in zoom-in-95 duration-400 space-y-4">
 			<DialogHeader>
 				<DialogTitle>Booking Details</DialogTitle>
 				<DialogDescription>
 					Complete information about this booking
 				</DialogDescription>
 			</DialogHeader>
+
+			{error && <div className="text-red-500">{error}</div>}
 
 			<div className="py-4 space-y-4">
 				<div className="grid grid-cols-2 gap-4">
@@ -228,7 +231,7 @@ const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 					<Button variant="outline">Close</Button>
 				</DialogClose>
 			</DialogFooter>
-		</>
+		</div>
 	);
 };
 

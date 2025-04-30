@@ -45,8 +45,8 @@ export default function BookingForm({ onSuccess }: BookingFormProps) {
 		try {
 			const services = await getServices();
 			setServices(services);
-		} catch {
-			setError("Failed to load services");
+		} catch (error) {
+			setError("Error loading data: " + error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -67,7 +67,7 @@ export default function BookingForm({ onSuccess }: BookingFormProps) {
 	if (isLoading) return <LoadingSpinner />;
 
 	return (
-		<>
+		<div className="animate-in fade-in zoom-in-95 duration-400 space-y-4">
 			<DialogHeader>
 				<DialogTitle>Book a Service</DialogTitle>
 				<DialogDescription>
@@ -90,6 +90,6 @@ export default function BookingForm({ onSuccess }: BookingFormProps) {
 					</DialogFooter>
 				</form>
 			</Form>
-		</>
+		</div>
 	);
 }

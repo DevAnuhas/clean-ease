@@ -25,6 +25,7 @@ export default function Dashboard() {
 	const [dialogState, setDialogState] = useState<{
 		type: "new" | "edit" | "details" | null;
 		bookingId?: string;
+		isClosing?: boolean;
 	}>({ type: null });
 
 	const handleNewBooking = () => setDialogState({ type: "new" });
@@ -92,8 +93,8 @@ export default function Dashboard() {
 	}
 
 	return (
-		<div className="container mx-auto px-4 py-8">
-			<Suspense fallback={<div>Loading dashboard...</div>}>
+		<div className="container mx-auto px-4 py-8 animate-in fade-in duration-400">
+			<Suspense fallback={<LoadingSpinner />}>
 				<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
 					<div>
 						<h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -104,7 +105,7 @@ export default function Dashboard() {
 						</p>
 					</div>
 
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-4">
 						<div className="flex items-center">
 							<label htmlFor="status-filter" className="mr-2 text-sm">
 								Status:
@@ -131,6 +132,7 @@ export default function Dashboard() {
 					<BookingTable
 						bookings={filteredBookings}
 						services={services}
+						onNewBooking={handleNewBooking}
 						onStatusUpdate={handleStatusUpdate}
 						onViewDetails={handleViewDetails}
 						onEditBooking={handleEditBooking}
@@ -142,7 +144,7 @@ export default function Dashboard() {
 					open={dialogState.type !== null}
 					onOpenChange={() => handleCloseDialog()}
 				>
-					<DialogContent className="sm:max-w-[600px]">
+					<DialogContent className="sm:max-w-[500px] p-8 dialog-content">
 						{dialogState.type === "new" && (
 							<BookingForm
 								onSuccess={(booking) => {

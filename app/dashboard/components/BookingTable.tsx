@@ -40,6 +40,7 @@ interface BookingTableProps {
 const BookingTable = ({
 	bookings,
 	services,
+	onNewBooking,
 	onDelete,
 	onStatusUpdate,
 	onViewDetails,
@@ -60,10 +61,7 @@ const BookingTable = ({
 					<p className="text-center text-gray-500 py-8">
 						You don&apos;t have any bookings yet.
 					</p>
-					<Button
-						onClick={() => router.push("/booking")}
-						className="mx-auto flex"
-					>
+					<Button onClick={onNewBooking} className="mx-auto flex">
 						Book a Service
 					</Button>
 				</CardContent>
@@ -267,7 +265,7 @@ const BookingTable = ({
 							onClick={() => setConfirmDelete(null)}
 							disabled={isDeleting}
 						>
-							Cancel
+							Close
 						</Button>
 						<Button
 							variant="destructive"

@@ -32,7 +32,7 @@ const Footer = () => {
 							</li>
 							<li>
 								<Link
-									href="/booking"
+									href="/dashboard"
 									className="text-muted-foreground hover:text-cleaning-600 text-sm"
 								>
 									Book Now

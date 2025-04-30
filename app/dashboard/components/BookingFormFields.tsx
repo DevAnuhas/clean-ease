@@ -79,7 +79,11 @@ export function BookingFormFields({ form, services }: BookingFormFieldsProps) {
 					<FormItem>
 						<FormLabel>Service Address</FormLabel>
 						<FormControl>
-							<Textarea {...field} disabled={isSubmitting} />
+							<Textarea
+								{...field}
+								disabled={isSubmitting}
+								className="overflow-auto resize-none"
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
