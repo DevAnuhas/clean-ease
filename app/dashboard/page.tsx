@@ -5,6 +5,7 @@ import type { Booking, Service } from "@/types";
 import { getBookings, getServices } from "@/lib/api-client";
 import { useAdmin } from "@/lib/use-admin";
 
+import LoadingSpinner from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import BookingTable from "@/app/dashboard/components/BookingTable";
@@ -83,7 +84,7 @@ export default function Dashboard() {
 	};
 
 	if (isLoading || isAdminLoading) {
-		return <div>Loading...</div>;
+		return <LoadingSpinner />;
 	}
 
 	if (error) {

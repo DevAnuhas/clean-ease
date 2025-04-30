@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import LoadingSpinner from "@/components/ui/spinner";
 import type { Booking } from "@/types";
 import { useAdmin } from "@/lib/use-admin";
 import { getBooking, getServices, updateBooking } from "@/lib/api-client";
@@ -74,7 +75,7 @@ const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 		}
 	}
 
-	if (isLoading) return <div>Loading...</div>;
+	if (isLoading) return <LoadingSpinner />;
 	if (!booking) return <div>Booking not found</div>;
 
 	const handleStatusChange = async (status: Booking["status"]) => {

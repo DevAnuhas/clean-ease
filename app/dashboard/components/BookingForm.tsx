@@ -12,6 +12,7 @@ import {
 	DialogTitle,
 	DialogDescription,
 } from "@/components/ui/dialog";
+import LoadingSpinner from "@/components/ui/spinner";
 import { BookingFormFields } from "./BookingFormFields";
 import type { Service, Booking } from "@/types";
 import { getServices, createBooking } from "@/lib/api-client";
@@ -63,7 +64,7 @@ export default function BookingForm({ onSuccess }: BookingFormProps) {
 		}
 	}
 
-	if (isLoading) return <div>Loading...</div>;
+	if (isLoading) return <LoadingSpinner />;
 
 	return (
 		<>
