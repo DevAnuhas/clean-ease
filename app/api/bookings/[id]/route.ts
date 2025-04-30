@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 // GET /api/bookings/[id] - Get a specific booking
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } }
+	{ params }: { params: { id: string } } & { searchParams: URLSearchParams }
 ): Promise<Response> {
 	try {
 		const user = await requireUser();
@@ -37,7 +37,7 @@ export async function GET(
 // PUT /api/bookings/[id] - Update a booking
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } }
+	{ params }: { params: { id: string } } & { searchParams: URLSearchParams }
 ): Promise<Response> {
 	try {
 		const user = await requireUser();
@@ -90,7 +90,7 @@ export async function PUT(
 // DELETE /api/bookings/[id] - Delete a booking
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } }
+	{ params }: { params: { id: string } } & { searchParams: URLSearchParams }
 ): Promise<Response> {
 	try {
 		const user = await requireUser();

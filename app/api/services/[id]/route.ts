@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 // GET /api/services/[id] - Get a specific service
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } }
+	{ params }: { params: { id: string } } & { searchParams: URLSearchParams }
 ): Promise<Response> {
 	try {
 		const supabase = await createClient();
@@ -35,7 +35,7 @@ export async function GET(
 // PUT /api/services/[id] - Update a service (admin only)
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } }
+	{ params }: { params: { id: string } } & { searchParams: URLSearchParams }
 ): Promise<Response> {
 	try {
 		// Check if user is admin
@@ -83,7 +83,7 @@ export async function PUT(
 // DELETE /api/services/[id] - Delete a service (admin only)
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } }
+	{ params }: { params: { id: string } } & { searchParams: URLSearchParams }
 ): Promise<Response> {
 	try {
 		// Check if user is admin
