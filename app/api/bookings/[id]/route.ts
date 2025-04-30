@@ -6,15 +6,9 @@ import { requireUser } from "@/lib/auth";
 
 // GET /api/bookings/[id] - Get a specific booking
 export async function GET(
-<<<<<<< HEAD
-	req: NextRequest,
-	context: { params: { id: string } }
-) {
-=======
 	request: Request,
 	{ params }: { params: { id: string } }
 ): Promise<Response> {
->>>>>>> temp-branch
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
@@ -22,7 +16,7 @@ export async function GET(
 		const { data, error } = await supabase
 			.from("bookings")
 			.select("*, services(*)")
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.eq("user_id", user.id)
 			.single();
 
@@ -42,15 +36,9 @@ export async function GET(
 
 // PUT /api/bookings/[id] - Update a booking
 export async function PUT(
-<<<<<<< HEAD
-	req: NextRequest,
-	context: { params: { id: string } }
-) {
-=======
 	request: Request,
 	{ params }: { params: { id: string } }
 ): Promise<Response> {
->>>>>>> temp-branch
 	try {
 		const user = await requireUser();
 		const validation = await validateRequest(request, bookingSchema);
@@ -66,7 +54,7 @@ export async function PUT(
 		const { data: existingBooking, error: fetchError } = await supabase
 			.from("bookings")
 			.select("id, user_id")
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.single();
 
 		if (fetchError || !existingBooking) {
@@ -84,7 +72,7 @@ export async function PUT(
 		const { data, error } = await supabase
 			.from("bookings")
 			.update(bookingData)
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.select()
 			.single();
 
@@ -101,15 +89,9 @@ export async function PUT(
 
 // DELETE /api/bookings/[id] - Delete a booking
 export async function DELETE(
-<<<<<<< HEAD
-	req: NextRequest,
-	context: { params: { id: string } }
-) {
-=======
 	request: Request,
 	{ params }: { params: { id: string } }
 ): Promise<Response> {
->>>>>>> temp-branch
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
@@ -118,7 +100,7 @@ export async function DELETE(
 		const { data: existingBooking, error: fetchError } = await supabase
 			.from("bookings")
 			.select("id, user_id")
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.single();
 
 		if (fetchError || !existingBooking) {
@@ -136,7 +118,7 @@ export async function DELETE(
 		const { error } = await supabase
 			.from("bookings")
 			.delete()
-			.eq("id", context.params.id);
+			.eq("id", params.id);
 
 		if (error) {
 			return errorResponse(error.message, 500);

@@ -6,22 +6,16 @@ import { requireAdmin } from "@/lib/auth";
 
 // GET /api/services/[id] - Get a specific service
 export async function GET(
-<<<<<<< HEAD
-	req: NextRequest,
-	context: { params: { id: string } }
-) {
-=======
 	request: Request,
 	{ params }: { params: { id: string } }
 ): Promise<Response> {
->>>>>>> temp-branch
 	try {
 		const supabase = await createClient();
 
 		const { data, error } = await supabase
 			.from("services")
 			.select("*")
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.single();
 
 		if (error) {
@@ -40,15 +34,9 @@ export async function GET(
 
 // PUT /api/services/[id] - Update a service (admin only)
 export async function PUT(
-<<<<<<< HEAD
-	req: NextRequest,
-	context: { params: { id: string } }
-) {
-=======
 	request: Request,
 	{ params }: { params: { id: string } }
 ): Promise<Response> {
->>>>>>> temp-branch
 	try {
 		// Check if user is admin
 		await requireAdmin();
@@ -66,7 +54,7 @@ export async function PUT(
 		const { data: existingService, error: fetchError } = await supabase
 			.from("services")
 			.select("id")
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.single();
 
 		if (fetchError || !existingService) {
@@ -77,7 +65,7 @@ export async function PUT(
 		const { data, error } = await supabase
 			.from("services")
 			.update(serviceData)
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.select()
 			.single();
 
@@ -94,15 +82,9 @@ export async function PUT(
 
 // DELETE /api/services/[id] - Delete a service (admin only)
 export async function DELETE(
-<<<<<<< HEAD
-	req: NextRequest,
-	context: { params: { id: string } }
-) {
-=======
 	request: Request,
 	{ params }: { params: { id: string } }
 ): Promise<Response> {
->>>>>>> temp-branch
 	try {
 		// Check if user is admin
 		await requireAdmin();
@@ -113,7 +95,7 @@ export async function DELETE(
 		const { data: existingService, error: fetchError } = await supabase
 			.from("services")
 			.select("id")
-			.eq("id", context.params.id)
+			.eq("id", params.id)
 			.single();
 
 		if (fetchError || !existingService) {
@@ -124,7 +106,7 @@ export async function DELETE(
 		const { data: bookingsWithService, error: bookingsError } = await supabase
 			.from("bookings")
 			.select("id")
-			.eq("service_id", context.params.id)
+			.eq("service_id", params.id)
 			.limit(1);
 
 		if (
@@ -142,7 +124,7 @@ export async function DELETE(
 		const { error } = await supabase
 			.from("services")
 			.delete()
-			.eq("id", context.params.id);
+			.eq("id", params.id);
 
 		if (error) {
 			return errorResponse(error.message, 500);
