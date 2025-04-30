@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Database } from "@/types/supabase";
 
 // Service schema for validation
 export const serviceSchema = z.object({
@@ -7,10 +8,7 @@ export const serviceSchema = z.object({
 	price: z.number().positive("Price must be a positive number"),
 });
 
-export type Service = z.infer<typeof serviceSchema> & {
-	id: string;
-	created_at: string;
-};
+export type Service = Database["public"]["Tables"]["services"]["Row"];
 
 // Booking schema for validation
 export const bookingSchema = z.object({
@@ -23,12 +21,7 @@ export const bookingSchema = z.object({
 	status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
 });
 
-export type Booking = z.infer<typeof bookingSchema> & {
-	id: string;
-	user_id: string;
-	created_at: string;
-	status: "pending" | "confirmed" | "completed" | "cancelled";
-};
+export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 // Error response type
 export type ErrorResponse = {

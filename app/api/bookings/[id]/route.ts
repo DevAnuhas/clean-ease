@@ -2,49 +2,45 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { bookingSchema } from "@/lib/types";
 import { validateRequest } from "@/lib/api-utils";
-import { requireUser } from "@/lib/auth";
+import { withErrorHandler, withAuth } from "@/middleware/error-handler";
+import { DatabaseError, NotFoundError, ForbiddenError } from "@/lib/errors";
 
 // GET /api/bookings/[id] - Get a specific booking
-export async function GET(
-	request: NextRequest,
+async function getBooking(
+	req: NextRequest,
 	{ params }: { params: { id: string } }
-): Promise<NextResponse> {
-	const user = await requireUser();
+) {
 	const supabase = await createClient();
+
+	const userId = req.headers.get("x-user-id");
+	if (userId === null) {
+		throw new ForbiddenError("User not authenticated");
+	}
 
 	const { data, error } = await supabase
 		.from("bookings")
 		.select("*, services(*)")
 		.eq("id", params.id)
-		.eq("user_id", user.id)
+		.eq("user_id", userId)
 		.single();
 
 	if (error) {
-		return NextResponse.json(
-			{ message: error.message },
-			{ status: error.code === "PGRST116" ? 404 : 500 }
-		);
+		if (error.code === "PGRST116") {
+			throw new NotFoundError("Booking not found");
+		}
+		throw new DatabaseError(error.message);
 	}
 
 	return NextResponse.json(data);
 }
 
 // PUT /api/bookings/[id] - Update a booking
-export async function PUT(
-	request: Request,
+async function updateBooking(
+	req: NextRequest,
 	{ params }: { params: { id: string } }
-): Promise<Response> {
-	const user = await requireUser();
-	const validation = await validateRequest(request, bookingSchema);
-
-	if (!validation.success) {
-		return NextResponse.json(
-			{ message: validation.error.error },
-			{ status: validation.error.status }
-		);
-	}
-
-	const bookingData = validation.data;
+) {
+	const userId = req.headers.get("x-user-id");
+	const bookingData = await validateRequest(req, bookingSchema);
 	const supabase = await createClient();
 
 	// Check if the booking exists and belongs to the user
@@ -54,14 +50,13 @@ export async function PUT(
 		.eq("id", params.id)
 		.single();
 
-	if (fetchError || !existingBooking) {
-		return NextResponse.json({ message: "Booking not found" }, { status: 404 });
+	if (fetchError) {
+		throw new NotFoundError("Booking not found");
 	}
 
-	if (existingBooking.user_id !== user.id) {
-		return NextResponse.json(
-			{ message: "You do not have permission to update this booking" },
-			{ status: 403 }
+	if (existingBooking.user_id !== userId) {
+		throw new ForbiddenError(
+			"You do not have permission to update this booking"
 		);
 	}
 
@@ -74,18 +69,18 @@ export async function PUT(
 		.single();
 
 	if (error) {
-		return NextResponse.json({ message: error.message }, { status: 500 });
+		throw new DatabaseError(error.message);
 	}
 
 	return NextResponse.json(data);
 }
 
 // DELETE /api/bookings/[id] - Delete a booking
-export async function DELETE(
-	request: Request,
+async function deleteBooking(
+	req: NextRequest,
 	{ params }: { params: { id: string } }
-): Promise<Response> {
-	const user = await requireUser();
+) {
+	const userId = req.headers.get("x-user-id");
 	const supabase = await createClient();
 
 	// Check if the booking exists and belongs to the user
@@ -95,14 +90,13 @@ export async function DELETE(
 		.eq("id", params.id)
 		.single();
 
-	if (fetchError || !existingBooking) {
-		return NextResponse.json({ message: "Booking not found" }, { status: 404 });
+	if (fetchError) {
+		throw new NotFoundError("Booking not found");
 	}
 
-	if (existingBooking.user_id !== user.id) {
-		return NextResponse.json(
-			{ message: "You do not have permission to delete this booking" },
-			{ status: 403 }
+	if (existingBooking.user_id !== userId) {
+		throw new ForbiddenError(
+			"You do not have permission to delete this booking"
 		);
 	}
 
@@ -113,8 +107,12 @@ export async function DELETE(
 		.eq("id", params.id);
 
 	if (error) {
-		return NextResponse.json({ message: error.message }, { status: 500 });
+		throw new DatabaseError(error.message);
 	}
 
 	return new NextResponse(null, { status: 204 });
 }
+
+export const GET = withErrorHandler(withAuth(getBooking));
+export const PUT = withErrorHandler(withAuth(updateBooking));
+export const DELETE = withErrorHandler(withAuth(deleteBooking));

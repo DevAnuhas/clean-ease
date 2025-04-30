@@ -2,11 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { serviceSchema } from "@/lib/types";
 import { validateRequest } from "@/lib/api-utils";
-import { requireAdmin } from "@/lib/auth";
+import { withErrorHandler, withAdminAuth } from "@/middleware/error-handler";
+import { DatabaseError, NotFoundError, ValidationError } from "@/lib/errors";
 
 // GET /api/services/[id] - Get a specific service
-export async function GET(
-	request: NextRequest,
+async function getService(
+	req: NextRequest,
 	{ params }: { params: { id: string } }
 ): Promise<NextResponse> {
 	const supabase = await createClient();
@@ -18,44 +19,32 @@ export async function GET(
 		.single();
 
 	if (error) {
-		return NextResponse.json(
-			{ message: error.message },
-			{ status: error.code === "PGRST116" ? 404 : 500 }
-		);
+		if (error.code === "PGRST116") {
+			throw new NotFoundError("Service not found");
+		}
+		throw new DatabaseError(error.message);
 	}
 
 	return NextResponse.json(data);
 }
 
 // PUT /api/services/[id] - Update a service (admin only)
-export async function PUT(
-	request: NextRequest,
+async function updateService(
+	req: NextRequest,
 	{ params }: { params: { id: string } }
-): Promise<NextResponse> {
-	// Check if user is admin
-	await requireAdmin();
-
-	const validation = await validateRequest(request, serviceSchema);
-
-	if (!validation.success) {
-		return NextResponse.json(
-			{ message: validation.error.error },
-			{ status: validation.error.status }
-		);
-	}
-
-	const serviceData = validation.data;
+) {
+	const serviceData = await validateRequest(req, serviceSchema);
 	const supabase = await createClient();
 
 	// Check if the service exists
-	const { data: existingService, error: fetchError } = await supabase
+	const { error: fetchError } = await supabase
 		.from("services")
 		.select("id")
 		.eq("id", params.id)
 		.single();
 
-	if (fetchError || !existingService) {
-		return NextResponse.json({ message: "Service not found" }, { status: 404 });
+	if (fetchError) {
+		throw new NotFoundError("Service not found");
 	}
 
 	// Update the service
@@ -67,34 +56,28 @@ export async function PUT(
 		.single();
 
 	if (error) {
-		return NextResponse.json(
-			{ message: error.message },
-			{ status: error.code === "PGRST116" ? 404 : 500 }
-		);
+		throw new DatabaseError(error.message);
 	}
 
 	return NextResponse.json(data);
 }
 
 // DELETE /api/services/[id] - Delete a service (admin only)
-export async function DELETE(
-	request: NextRequest,
+async function deleteService(
+	req: NextRequest,
 	{ params }: { params: { id: string } }
-): Promise<NextResponse> {
-	// Check if user is admin
-	await requireAdmin();
-
+) {
 	const supabase = await createClient();
 
 	// Check if the service exists
-	const { data: existingService, error: fetchError } = await supabase
+	const { error: fetchError } = await supabase
 		.from("services")
 		.select("id")
 		.eq("id", params.id)
 		.single();
 
-	if (fetchError || !existingService) {
-		return NextResponse.json({ message: "Service not found" }, { status: 404 });
+	if (fetchError) {
+		throw new NotFoundError("Service not found");
 	}
 
 	// Check if there are any bookings using this service
@@ -105,9 +88,8 @@ export async function DELETE(
 		.limit(1);
 
 	if (!bookingsError && bookingsWithService && bookingsWithService.length > 0) {
-		return NextResponse.json(
-			{ message: "Cannot delete service that has associated bookings" },
-			{ status: 400 }
+		throw new ValidationError(
+			"Cannot delete service that has associated bookings"
 		);
 	}
 
@@ -118,8 +100,14 @@ export async function DELETE(
 		.eq("id", params.id);
 
 	if (error) {
-		return NextResponse.json({ message: error.message }, { status: 500 });
+		throw new DatabaseError(error.message);
 	}
 
 	return new NextResponse(null, { status: 204 });
 }
+
+// Public endpoint - no auth required
+export const GET = withErrorHandler(getService);
+// Admin only endpoints
+export const PUT = withErrorHandler(withAdminAuth(updateService));
+export const DELETE = withErrorHandler(withAdminAuth(deleteService));
