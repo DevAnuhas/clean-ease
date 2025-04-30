@@ -4,11 +4,12 @@ import { bookingSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
 import { requireUser } from "@/lib/auth";
 
+type Params = {
+	id: string;
+};
+
 // GET /api/bookings/[id] - Get a specific booking
-export async function GET(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: Params }) {
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
@@ -35,10 +36,7 @@ export async function GET(
 }
 
 // PUT /api/bookings/[id] - Update a booking
-export async function PUT(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Params }) {
 	try {
 		const user = await requireUser();
 		const validation = await validateRequest(req, bookingSchema);
@@ -88,10 +86,7 @@ export async function PUT(
 }
 
 // DELETE /api/bookings/[id] - Delete a booking
-export async function DELETE(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Params }) {
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();

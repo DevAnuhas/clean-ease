@@ -4,11 +4,12 @@ import { serviceSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
 import { requireAdmin } from "@/lib/auth";
 
+type Params = {
+	id: string;
+};
+
 // GET /api/services/[id] - Get a service by ID
-export async function GET(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: Params }) {
 	try {
 		const supabase = await createClient();
 
@@ -33,10 +34,7 @@ export async function GET(
 }
 
 // PUT /api/services/[id] - Update a service (admin only)
-export async function PUT(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Params }) {
 	try {
 		// Check if user is admin
 		await requireAdmin();
@@ -81,10 +79,7 @@ export async function PUT(
 }
 
 // DELETE /api/services/[id] - Delete a service (admin only)
-export async function DELETE(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Params }) {
 	try {
 		// Check if user is admin
 		await requireAdmin();
