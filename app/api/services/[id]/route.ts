@@ -4,19 +4,18 @@ import { serviceSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
 import { requireAdmin } from "@/lib/auth";
 
-type Params = {
-	id: string;
-};
-
 // GET /api/services/[id] - Get a service by ID
-export async function GET(req: NextRequest, { params }: { params: Params }) {
+export async function GET(
+	request: NextRequest,
+	context: { params: { id: string } }
+) {
 	try {
 		const supabase = await createClient();
 
 		const { data, error } = await supabase
 			.from("services")
 			.select("*")
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.single();
 
 		if (error) {
@@ -34,7 +33,10 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
 }
 
 // PUT /api/services/[id] - Update a service (admin only)
-export async function PUT(req: NextRequest, { params }: { params: Params }) {
+export async function PUT(
+	req: NextRequest,
+	{ params }: { params: { id: string } }
+) {
 	try {
 		// Check if user is admin
 		await requireAdmin();
@@ -79,7 +81,10 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
 }
 
 // DELETE /api/services/[id] - Delete a service (admin only)
-export async function DELETE(req: NextRequest, { params }: { params: Params }) {
+export async function DELETE(
+	req: NextRequest,
+	{ params }: { params: { id: string } }
+) {
 	try {
 		// Check if user is admin
 		await requireAdmin();

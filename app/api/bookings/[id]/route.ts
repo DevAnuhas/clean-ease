@@ -4,12 +4,11 @@ import { bookingSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
 import { requireUser } from "@/lib/auth";
 
-type Params = {
-	id: string;
-};
-
 // GET /api/bookings/[id] - Get a specific booking
-export async function GET(req: NextRequest, { params }: { params: Params }) {
+export async function GET(
+	request: NextRequest,
+	context: { params: { id: string } }
+) {
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
@@ -17,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
 		const { data, error } = await supabase
 			.from("bookings")
 			.select("*, services(*)")
-			.eq("id", params.id)
+			.eq("id", context.params.id)
 			.eq("user_id", user.id)
 			.single();
 
@@ -36,7 +35,10 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
 }
 
 // PUT /api/bookings/[id] - Update a booking
-export async function PUT(req: NextRequest, { params }: { params: Params }) {
+export async function PUT(
+	req: NextRequest,
+	{ params }: { params: { id: string } }
+) {
 	try {
 		const user = await requireUser();
 		const validation = await validateRequest(req, bookingSchema);
@@ -86,7 +88,10 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
 }
 
 // DELETE /api/bookings/[id] - Delete a booking
-export async function DELETE(req: NextRequest, { params }: { params: Params }) {
+export async function DELETE(
+	req: NextRequest,
+	{ params }: { params: { id: string } }
+) {
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
