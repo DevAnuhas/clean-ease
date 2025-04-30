@@ -1,14 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { serviceSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
 import { requireAdmin } from "@/lib/auth";
 
-// GET /api/services/[id] - Get a service by ID
+// GET /api/services/[id] - Get a specific service
 export async function GET(
-	req: NextRequest,
+	request: Request,
 	{ params }: { params: { id: string } }
-) {
+): Promise<Response> {
 	try {
 		const supabase = await createClient();
 
@@ -34,14 +34,14 @@ export async function GET(
 
 // PUT /api/services/[id] - Update a service (admin only)
 export async function PUT(
-	req: NextRequest,
+	request: Request,
 	{ params }: { params: { id: string } }
-) {
+): Promise<Response> {
 	try {
 		// Check if user is admin
 		await requireAdmin();
 
-		const validation = await validateRequest(req, serviceSchema);
+		const validation = await validateRequest(request, serviceSchema);
 
 		if (!validation.success) {
 			return errorResponse(validation.error.error, validation.error.status);
@@ -82,9 +82,9 @@ export async function PUT(
 
 // DELETE /api/services/[id] - Delete a service (admin only)
 export async function DELETE(
-	req: NextRequest,
+	request: Request,
 	{ params }: { params: { id: string } }
-) {
+): Promise<Response> {
 	try {
 		// Check if user is admin
 		await requireAdmin();
