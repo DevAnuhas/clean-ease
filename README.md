@@ -8,27 +8,24 @@ This application provides a platform for users to book cleaning services and for
 
 ## Features
 
-### User Features
-
-- **Authentication**: Sign up and log in to access personalized dashboard
-- **Booking Creation**: Form to input customer details, address, date/time, and select service type
-- **Booking Management**: View, edit, and cancel existing bookings
-- **Responsive UI**: Works seamlessly on mobile and desktop devices
-
-### Admin Features
-
-- **Service Management**: Add, edit, and delete service types
-- **Booking Oversight**: View all bookings, filter by user or status
-<!--- - **User Management**: View and manage user accounts -->
+- **User Authentication**: Secure login and registration with Supabase Auth
+- **Role-Based Access Control**: Different permissions for users and administrators
+- **Service Management**: Create, update, and delete services
+- **Booking Management**: Full CRUD operations for bookings
+- **Dashboard**: User-friendly dashboard to view and manage bookings
+- **Form Validation**: Client and server-side validation using Zod
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Real-time Updates**: Instant updates when bookings are created or modified
+- **Admin Panel**: Comprehensive admin tools for business management
+- **API Documentation**: Well-documented API endpoints for developers
 
 ## Tech Stack
 
 - **Frontend**: Next.js 15 (App Router), React, Tailwind CSS, Shadcn UI
-- **Backend**: Next.js API Routes, Supabase
+- **Backend**: Next.js API Routes, Supabase, TypeScript
 - **Database**: PostgreSQL (via Supabase)
 - **Authentication**: Supabase Auth
 - **Form Validation**: Zod, React Hook Form
-- **Styling**: Tailwind CSS, Shadcn UI components
 
 ## Getting Started
 
@@ -41,114 +38,80 @@ This application provides a platform for users to book cleaning services and for
 
 1. Clone the repository:
 
-   ```shellscript
+   ```bash
    git clone https://github.com/DevAnuhas/clean-ease.git
    cd clean-ease
    ```
 
 2. Install dependencies:
 
-   ```shellscript
+   ```bash
    npm install
    ```
 
 3. Set up environment variables: Create a `.env.local` file in the root directory with the following variables:
 
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   NEXT_PUBLIC_SUPABASE_URL=<your_supabase_url>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your_supabase_anon_key>
    ```
 
-4. Run the development server:
+4. Set up the database: Run the SQL scripts in the [`schema.sql`](schema.sql) file in your Supabase SQL editor to create the necessary tables and policies.
 
-   ```shellscript
+5. Run the development server:
+
+   ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Database Setup
+### Database Schema
 
-The application requires the following tables in your Supabase database:
+The application uses the following database tables:
 
-1. **Users**:
-
-   ```sql
-   CREATE TABLE IF NOT EXISTS users (
-      id UUID PRIMARY KEY,
-      username VARCHAR(255) NOT NULL UNIQUE,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      is_admin BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-   ```
-
-2. **Services**:
-
-   ```sql
-   CREATE TABLE IF NOT EXISTS services (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name VARCHAR(255) NOT NULL,
-      description TEXT,
-      price DECIMAL(10, 2) NOT NULL,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-   ```
-
-3. **Bookings**:
-
-   ```sql
-   CREATE TABLE IF NOT EXISTS bookings (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      customer_name VARCHAR(255) NOT NULL,
-      address TEXT NOT NULL,
-      date_time TIMESTAMP WITH TIME ZONE NOT NULL,
-      service_id UUID NOT NULL REFERENCES services(id),
-      user_id UUID NOT NULL REFERENCES users(id),
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-   ```
+- **services**: Stores information about available services
+- **bookings**: Stores booking information
+- **user_roles**: Stores user role information for access control
 
 ### Row Level Security (RLS) Policies
 
-Set up the following RLS policies in Supabase:
+The application uses Supabase Auth for authentication and implements role-based access control:
 
-1. **Users Table**:
+- **Public**: Can view services
+- **Users**: Can create, view, update, and delete their own bookings
+- **Admins**: Can manage all bookings and services
 
-   - Users can only access their own data
-   - Admins can access all user data
+You can modify a user's role by running the following SQL command in the Supabase SQL Editor:
 
-1. **Services Table**:
-
-   - All users can read services
-   - Only admins can create, update, or delete services
-
-1. **Bookings Table**:
-
-   - Users can only access their own bookings
-   - Admins can access all bookings
+```sql
+-- Replace 'user_email@example.com' with the email of the user you want to make an admin
+UPDATE auth.users
+SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}'
+WHERE email = 'user_email@example.com';
+```
 
 ## API Endpoints
 
 ### Authentication
 
-- `POST /api/auth/signup`: Create a new user
-- `POST /api/auth/login`: Authenticate and return a session token
-- `POST /api/auth/logout`: Invalidate session
+- `POST /api/auth/confirm`: Confirm email address
 
 ### Bookings
 
-- `GET /api/bookings`: Fetch bookings for the authenticated user
+- `GET /api/bookings`: Get all bookings for the authenticated user
 - `POST /api/bookings`: Create a new booking
-- `PUT /api/bookings/[id]`: Update a booking
-- `DELETE /api/bookings/[id]`: Delete a booking
+- `GET /api/bookings/:id`: Get a specific booking
+- `PUT /api/bookings/:id`: Update a booking
+- `DELETE /api/bookings/:id`: Delete a booking
 
 ### Services
 
-- `GET /api/services`: Fetch all service types
+- `GET /api/services`: Get all services (public)
 - `POST /api/services`: Create a new service (admin only)
-- `PUT /api/services/[id]`: Update a service (admin only)
-- `DELETE /api/services/[id]`: Delete a service (admin only)
+- `GET /api/services/:id`: Get a specific service
+- `PUT /api/services/:id`: Update a service (admin only)
+- `DELETE /api/services/:id`: Delete a service (admin only)
 
 ## Deployment
 
