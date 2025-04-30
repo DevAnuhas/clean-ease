@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { ZodError, type ZodSchema } from "zod";
 import type { ErrorResponse } from "./types";
 
 export async function validateRequest<T>(
-	req: NextRequest,
+	req: Request,
 	schema: ZodSchema<T>
 ): Promise<
 	{ success: true; data: T } | { success: false; error: ErrorResponse }
@@ -35,6 +35,6 @@ export async function validateRequest<T>(
 	}
 }
 
-export function errorResponse(message: string, status = 400): NextResponse {
+export function errorResponse(message: string, status = 400): Response {
 	return NextResponse.json({ error: message }, { status });
 }

@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { bookingSchema } from "@/lib/types";
 import { validateRequest, errorResponse } from "@/lib/api-utils";
@@ -6,9 +6,15 @@ import { requireUser } from "@/lib/auth";
 
 // GET /api/bookings/[id] - Get a specific booking
 export async function GET(
+<<<<<<< HEAD
 	req: NextRequest,
 	context: { params: { id: string } }
 ) {
+=======
+	request: Request,
+	{ params }: { params: { id: string } }
+): Promise<Response> {
+>>>>>>> temp-branch
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
@@ -36,12 +42,18 @@ export async function GET(
 
 // PUT /api/bookings/[id] - Update a booking
 export async function PUT(
+<<<<<<< HEAD
 	req: NextRequest,
 	context: { params: { id: string } }
 ) {
+=======
+	request: Request,
+	{ params }: { params: { id: string } }
+): Promise<Response> {
+>>>>>>> temp-branch
 	try {
 		const user = await requireUser();
-		const validation = await validateRequest(req, bookingSchema);
+		const validation = await validateRequest(request, bookingSchema);
 
 		if (!validation.success) {
 			return errorResponse(validation.error.error, validation.error.status);
@@ -89,9 +101,15 @@ export async function PUT(
 
 // DELETE /api/bookings/[id] - Delete a booking
 export async function DELETE(
+<<<<<<< HEAD
 	req: NextRequest,
 	context: { params: { id: string } }
 ) {
+=======
+	request: Request,
+	{ params }: { params: { id: string } }
+): Promise<Response> {
+>>>>>>> temp-branch
 	try {
 		const user = await requireUser();
 		const supabase = await createClient();
