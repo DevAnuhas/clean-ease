@@ -166,7 +166,7 @@ export default function Dashboard() {
 						{dialogState.type === "details" && dialogState.bookingId && (
 							<BookingDetails
 								bookingId={dialogState.bookingId}
-								onStatusUpdate={handleStatusUpdate}
+								onUpdateStatus={handleStatusUpdate}
 							/>
 						)}
 					</DialogContent>

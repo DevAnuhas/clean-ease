@@ -76,12 +76,14 @@ const BookingTable = ({
 		return service ? service.name : "Unknown Service";
 	};
 
-	const getStatusVariant = (status: Booking["status"]) => {
+	const getStatusVariant = (
+		status: Booking["status"]
+	): "default" | "destructive" | "outline" | "secondary" | null => {
 		switch (status) {
 			case "confirmed":
-				return "success";
+				return "default";
 			case "pending":
-				return "warning";
+				return "secondary";
 			case "completed":
 				return "default";
 			case "cancelled":
@@ -169,7 +171,7 @@ const BookingTable = ({
 											{booking.customer_name}
 										</TableCell>
 										<TableCell>
-											<Badge variant={getStatusVariant(booking.status) as any}>
+											<Badge variant={getStatusVariant(booking.status)}>
 												{booking.status.charAt(0).toUpperCase() +
 													booking.status.slice(1)}
 											</Badge>

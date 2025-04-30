@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import type { Service } from "@/types";
 import { BookingFormValues } from "@/lib/form-schemas";
+import { UseFormReturn } from "react-hook-form";
 
 interface BookingFormFieldsProps {
 	form: UseFormReturn<BookingFormValues>;
