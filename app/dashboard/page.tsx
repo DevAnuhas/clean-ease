@@ -8,10 +8,10 @@ import { useAdmin } from "@/lib/use-admin";
 import LoadingSpinner from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import BookingTable from "@/app/dashboard/components/BookingTable";
-import BookingForm from "@/app/dashboard/components/BookingForm";
-import BookingDetails from "@/app/dashboard/components/BookingDetails";
-import EditBookingForm from "@/app/dashboard/components/EditBookingForm";
+import BookingTable from "@/components/dashboard/BookingTable";
+import BookingForm from "@/components/dashboard/BookingForm";
+import BookingDetails from "@/components/dashboard/BookingDetails";
+import EditBookingForm from "@/components/dashboard/EditBookingForm";
 
 export default function Dashboard() {
 	const { isAdmin, isLoading: isAdminLoading } = useAdmin();
