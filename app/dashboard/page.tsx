@@ -14,7 +14,7 @@ import BookingDetails from "@/components/dashboard/BookingDetails";
 import EditBookingForm from "@/components/dashboard/EditBookingForm";
 
 export default function Dashboard() {
-	const { isAdmin, isLoading: isAdminLoading } = useAdmin();
+	const { isAdmin } = useAdmin();
 	const [bookings, setBookings] = useState<Booking[]>([]);
 	const [services, setServices] = useState<Service[]>([]);
 	const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -84,7 +84,7 @@ export default function Dashboard() {
 		setBookings(bookings.filter((booking) => booking.id !== id));
 	};
 
-	if (isLoading || isAdminLoading) {
+	if (isLoading) {
 		return <LoadingSpinner />;
 	}
 

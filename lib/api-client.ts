@@ -44,7 +44,14 @@ export async function createBooking(
 
 export async function updateBooking(
 	id: string,
-	booking: Partial<Booking>
+	booking: {
+		customer_name: string;
+		address: string;
+		date_time: string;
+		service_id: string;
+	} & Partial<
+		Omit<Booking, "customer_name" | "address" | "date_time" | "service_id">
+	>
 ): Promise<Booking> {
 	const res = await fetch(`/api/bookings/${id}`, {
 		method: "PUT",

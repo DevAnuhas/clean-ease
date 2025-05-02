@@ -117,7 +117,13 @@ const BookingTable = ({
 
 	const handleStatusChange = async (id: string, status: Booking["status"]) => {
 		try {
-			await updateBooking(id, { status });
+			await updateBooking(id, {
+				status,
+				customer_name: "",
+				address: "",
+				date_time: "",
+				service_id: "",
+			});
 			if (onStatusUpdate) {
 				onStatusUpdate(id, status);
 			} else {
