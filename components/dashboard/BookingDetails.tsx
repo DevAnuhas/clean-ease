@@ -82,7 +82,13 @@ const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 	const handleStatusChange = async (status: Booking["status"]) => {
 		setIsUpdating(true);
 		try {
-			await updateBooking(booking.id, { status });
+			await updateBooking(booking.id, {
+				customer_name: booking.customer_name,
+				address: booking.address,
+				date_time: booking.date_time,
+				service_id: booking.service_id,
+				status,
+			});
 			if (onUpdateStatus) {
 				onUpdateStatus(booking.id, status);
 			} else {
