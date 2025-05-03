@@ -7,7 +7,14 @@ import { useAdmin } from "@/lib/use-admin";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
-
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import LoadingSpinner from "@/components/ui/spinner";
 import { toast } from "sonner";
 import BookingTable from "@/components/dashboard/BookingTable";
@@ -124,21 +131,24 @@ export default function Dashboard() {
 
 					<div className="flex items-center gap-4">
 						<div className="flex items-center">
-							<label htmlFor="status-filter" className="mr-2 text-sm">
-								Status:
-							</label>
-							<select
-								id="status-filter"
-								value={statusFilter}
-								onChange={(e) => setStatusFilter(e.target.value)}
-								className="text-sm rounded border p-2"
+							<label className="mr-2 text-sm">Status:</label>
+							<Select
+								onValueChange={(value) => setStatusFilter(value)}
+								defaultValue="all"
 							>
-								<option value="all">All</option>
-								<option value="pending">Pending</option>
-								<option value="confirmed">Confirmed</option>
-								<option value="completed">Completed</option>
-								<option value="cancelled">Cancelled</option>
-							</select>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectGroup>
+										<SelectItem value="all">All</SelectItem>
+										<SelectItem value="pending">Pending</SelectItem>
+										<SelectItem value="confirmed">Confirmed</SelectItem>
+										<SelectItem value="completed">Completed</SelectItem>
+										<SelectItem value="cancelled">Cancelled</SelectItem>
+									</SelectGroup>
+								</SelectContent>
+							</Select>
 						</div>
 					</div>
 				</div>
