@@ -13,10 +13,10 @@ This application provides a platform for users to book cleaning services and for
 - **Service Management**: Create, update, and delete services
 - **Booking Management**: Full CRUD operations for bookings
 - **Dashboard**: User-friendly dashboard to view and manage bookings
+- **Admin Panel**: Comprehensive admin tools for business management
 - **Form Validation**: Client and server-side validation using Zod
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Real-time Updates**: Instant updates when bookings are created or modified
-- **Admin Panel**: Comprehensive admin tools for business management
 - **API Documentation**: Well-documented API endpoints for developers
 
 ## Tech Stack
@@ -46,7 +46,7 @@ This application provides a platform for users to book cleaning services and for
 2. Install dependencies:
 
    ```bash
-   npm install
+   npm install --legacy-peer-deps
    ```
 
 3. Set up environment variables: Create a `.env.local` file in the root directory with the following variables:
@@ -72,7 +72,6 @@ The application uses the following database tables:
 
 - **services**: Stores information about available services
 - **bookings**: Stores booking information
-- **user_roles**: Stores user role information for access control
 
 ### Row Level Security (RLS) Policies
 
