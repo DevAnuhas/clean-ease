@@ -112,7 +112,9 @@ export default function Dashboard() {
 			<Suspense fallback={<LoadingSpinner />}>
 				<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
 					<div>
-						<h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+						<h1 className="text-2xl font-bold tracking-tight">
+							{isAdmin ? "Admin Panel" : "Dashboard"}
+						</h1>
 						<p className="text-muted-foreground">
 							{isAdmin
 								? "View and manage all bookings"

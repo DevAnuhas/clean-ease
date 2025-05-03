@@ -6,13 +6,11 @@ const RegisterPage = async () => {
 	const supabase = await createClient();
 
 	const {
-		data: { user },
-	} = await supabase.auth.getUser();
+		data: { session },
+	} = await supabase.auth.getSession();
 
-	const isAdmin = user?.app_metadata.role === "admin";
-
-	if (user) {
-		return redirect(`${isAdmin ? "/admin" : "/dashboard"}`);
+	if (session) {
+		return redirect("/dashboard");
 	}
 
 	return (

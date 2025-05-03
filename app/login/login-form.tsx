@@ -60,7 +60,7 @@ const LoginForm = () => {
 			const response = await login(data);
 
 			if (response.success) {
-				navigate(`${response.isAdmin ? "/admin" : "/dashboard"}`);
+				navigate("/dashboard");
 				toast(response.message, {
 					description: response.description,
 					duration: 5000,

@@ -7,10 +7,8 @@ const Navbar = async () => {
 	const supabase = await createClient();
 
 	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	const isAdmin = user?.app_metadata.role === "admin";
+		data: { session },
+	} = await supabase.auth.getSession();
 
 	return (
 		<header className="bg-white shadow-sm py-4">
@@ -22,15 +20,11 @@ const Navbar = async () => {
 				</Link>
 
 				<div className="flex items-center gap-4">
-					{user ? (
+					{session ? (
 						<>
 							<SignOutButton />
 							<div className="hidden md:flex items-center gap-6">
-								{isAdmin ? (
-									<Link href="/admin">
-										<Button>Admin Panel</Button>
-									</Link>
-								) : (
+								{session && (
 									<Link href="/dashboard">
 										<Button>Dashboard</Button>
 									</Link>
