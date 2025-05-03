@@ -20,7 +20,8 @@ import type { Service, Booking } from "@/types";
 import { format } from "date-fns";
 
 interface EditBookingFormProps {
-	bookingId: string;
+	onSubmit: (data: BookingFormValues) => Promise<void>;
+	booking?: Partial<Booking>;
 	onSuccess: (booking: Booking) => void;
 }
 
@@ -82,7 +83,7 @@ export default function EditBookingForm({
 	return (
 		<div className="animate-in fade-in zoom-in-95 duration-400 space-y-4">
 			<DialogHeader>
-				<DialogTitle>Edit Booking</DialogTitle>
+				<DialogTitle className="text-2xl font-bold">Edit Booking</DialogTitle>
 				<DialogDescription>Update the booking details</DialogDescription>
 			</DialogHeader>
 

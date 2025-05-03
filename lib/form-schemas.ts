@@ -8,6 +8,7 @@ export const bookingFormSchema = z.object({
 		message: "Invalid date format",
 	}),
 	service_id: z.string().uuid("Please select a valid service"),
+	status: z.string().optional(),
 });
 
 export type BookingFormValues = z.infer<typeof bookingFormSchema>;

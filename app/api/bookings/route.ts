@@ -16,7 +16,7 @@ async function getBookings(req: NextRequest) {
 
 	const { data, error } = await supabase
 		.from("bookings")
-		.select("*, services(*)")
+		.select("*, service:service_id(*)")
 		.eq("user_id", userId);
 
 	if (error) {

@@ -1,95 +1,110 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import type { Booking, Service } from "@/types";
-import { getBookings, getServices } from "@/lib/api-client";
+import type { Booking } from "@/types";
+import { getBookings } from "@/lib/api-client";
 import { useAdmin } from "@/lib/use-admin";
+import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/client";
+import { redirect } from "next/navigation";
 
 import LoadingSpinner from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import BookingTable from "@/components/dashboard/BookingTable";
-import BookingForm from "@/components/dashboard/BookingForm";
-import BookingDetails from "@/components/dashboard/BookingDetails";
-import EditBookingForm from "@/components/dashboard/EditBookingForm";
 
 export default function Dashboard() {
 	const { isAdmin } = useAdmin();
+	const [user, setUser] = useState<User | null>(null);
 	const [bookings, setBookings] = useState<Booking[]>([]);
-	const [services, setServices] = useState<Service[]>([]);
 	const [statusFilter, setStatusFilter] = useState<string>("all");
 	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-
-	const [dialogState, setDialogState] = useState<{
-		type: "new" | "edit" | "details" | null;
-		bookingId?: string;
-		isClosing?: boolean;
-	}>({ type: null });
-
-	const handleNewBooking = () => setDialogState({ type: "new" });
-	const handleEditBooking = (id: string) =>
-		setDialogState({ type: "edit", bookingId: id });
-	const handleViewDetails = (id: string) =>
-		setDialogState({ type: "details", bookingId: id });
-	const handleCloseDialog = () => setDialogState({ type: null });
 
 	useEffect(() => {
-		async function fetchData() {
-			try {
-				const [bookingsData, servicesData] = await Promise.all([
-					getBookings(),
-					getServices(),
-				]);
+		const supabase = createClient();
+		const checkSession = async () => {
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
 
-				// Add service details to each booking
-				const bookingsWithServices = bookingsData.map((booking) => {
-					const service = servicesData.find((s) => s.id === booking.service_id);
-					return { ...booking, service };
+			if (!session) {
+				toast.warning("Authentication required", {
+					description: "Please sign in to access the dashboard",
 				});
-
-				setBookings(bookingsWithServices);
-				setServices(servicesData);
-			} catch (err) {
-				console.error("Error fetching data:", err);
-				setError("Failed to load data. Please try again later.");
-			} finally {
-				setIsLoading(false);
+				redirect("/login");
 			}
-		}
 
-		fetchData();
+			setUser(session.user);
+			await fetchBookings();
+		};
+
+		checkSession();
+
+		// Set up subscription for real-time updates
+		const setupRealtimeSubscription = async () => {
+			const { data: authData } = await supabase.auth.getSession();
+			if (!authData.session) return;
+
+			const userId = authData.session.user.id;
+
+			const subscription = supabase
+				.channel("booking-changes")
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "bookings",
+						filter: `user_id=eq.${userId}`,
+					},
+					() => {
+						// Reload bookings when changes are detected
+						fetchBookings();
+					}
+				)
+				.subscribe();
+
+			return subscription;
+		};
+
+		const initialize = async () => {
+			await checkSession();
+			const subscription = await setupRealtimeSubscription();
+
+			return () => {
+				if (subscription) {
+					supabase.removeChannel(subscription);
+				}
+			};
+		};
+
+		const cleanup = initialize();
+		return () => {
+			cleanup.then((cleanupFn) => cleanupFn());
+		};
 	}, []);
+
+	const fetchBookings = async () => {
+		try {
+			setIsLoading(true);
+			const data = await getBookings();
+			setBookings(data);
+		} catch (error) {
+			console.error("Error fetching bookings:", error);
+			toast.error("Error", {
+				description: "Failed to load your bookings. Please try again.",
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	const filteredBookings =
 		statusFilter === "all"
 			? bookings
 			: bookings.filter((booking) => booking.status === statusFilter);
 
-	const handleStatusUpdate = (id: string, status: Booking["status"]) => {
-		setBookings(
-			bookings.map((booking) =>
-				booking.id === id ? { ...booking, status } : booking
-			)
-		);
-
-		// If the currently selected booking is being updated, update it too
-		if (selectedBooking && selectedBooking.id === id) {
-			setSelectedBooking({ ...selectedBooking, status });
-		}
-	};
-
-	const reloadTable = (id: string) => {
-		setBookings(bookings.filter((booking) => booking.id !== id));
-	};
-
 	if (isLoading) {
 		return <LoadingSpinner />;
-	}
-
-	if (error) {
-		return <div className="text-red-500">{error}</div>;
 	}
 
 	return (
@@ -123,57 +138,16 @@ export default function Dashboard() {
 								<option value="cancelled">Cancelled</option>
 							</select>
 						</div>
-
-						<Button onClick={handleNewBooking}>New Booking</Button>
 					</div>
 				</div>
 
 				<div className="grid grid-cols-1 gap-6">
 					<BookingTable
 						bookings={filteredBookings}
-						services={services}
-						onNewBooking={handleNewBooking}
-						onStatusUpdate={handleStatusUpdate}
-						onViewDetails={handleViewDetails}
-						onEditBooking={handleEditBooking}
-						onDelete={reloadTable}
+						onBookingChange={() => fetchBookings()}
+						userId={user?.id || ""}
 					/>
 				</div>
-
-				<Dialog
-					open={dialogState.type !== null}
-					onOpenChange={() => handleCloseDialog()}
-				>
-					<DialogContent className="sm:max-w-[500px] p-8 dialog-content">
-						{dialogState.type === "new" && (
-							<BookingForm
-								onSuccess={(booking) => {
-									setBookings([...bookings, booking]);
-									handleCloseDialog();
-								}}
-							/>
-						)}
-
-						{dialogState.type === "edit" && dialogState.bookingId && (
-							<EditBookingForm
-								bookingId={dialogState.bookingId}
-								onSuccess={(booking) => {
-									setBookings(
-										bookings.map((b) => (b.id === booking.id ? booking : b))
-									);
-									handleCloseDialog();
-								}}
-							/>
-						)}
-
-						{dialogState.type === "details" && dialogState.bookingId && (
-							<BookingDetails
-								bookingId={dialogState.bookingId}
-								onUpdateStatus={handleStatusUpdate}
-							/>
-						)}
-					</DialogContent>
-				</Dialog>
 			</Suspense>
 		</div>
 	);

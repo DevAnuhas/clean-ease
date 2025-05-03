@@ -8,29 +8,36 @@ import {
 	DialogDescription,
 	DialogFooter,
 } from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import LoadingSpinner from "@/components/ui/spinner";
+import { toast } from "sonner";
 import type { Booking } from "@/types";
-import { useAdmin } from "@/lib/use-admin";
-import { getBooking, getServices, updateBooking } from "@/lib/api-client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { updateBooking } from "@/lib/api-client";
+import { useState } from "react";
 
 interface BookingDetailsProps {
-	bookingId: string;
-	onUpdateStatus: (
-		id: string,
-		status: "pending" | "confirmed" | "completed" | "cancelled"
-	) => void;
+	booking: Booking;
+	onEdit?: () => void;
+	onCancel?: () => void;
+	onBookingChange?: () => void;
+	isAdmin?: boolean;
 }
 
-const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
-	const [booking, setBooking] = useState<Booking | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const { isAdmin } = useAdmin();
-	const router = useRouter();
+const BookingDetails = ({
+	booking,
+	onEdit,
+	onCancel,
+	onBookingChange,
+	isAdmin,
+}: BookingDetailsProps) => {
 	const [isUpdating, setIsUpdating] = useState(false);
 
 	const getStatusColor = (
@@ -50,189 +57,145 @@ const BookingDetails = ({ bookingId, onUpdateStatus }: BookingDetailsProps) => {
 		}
 	};
 
-	useEffect(() => {
-		loadData();
-	}, [bookingId]);
-
-	async function loadData() {
-		try {
-			const [bookingData, servicesData] = await Promise.all([
-				getBooking(bookingId),
-				getServices(),
-			]);
-
-			const bookingService = servicesData.find(
-				(s) => s.id === bookingData.service_id
-			);
-
-			setBooking({
-				...bookingData,
-				service: bookingService ?? undefined,
-			});
-		} catch (error) {
-			setError("Error loading data: " + error);
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	if (isLoading) return <LoadingSpinner />;
-	if (!booking) return <div>Booking not found</div>;
-
-	const handleStatusChange = async (status: Booking["status"]) => {
+	const handleStatusChange = async (id: string, status: Booking["status"]) => {
 		setIsUpdating(true);
 		try {
-			await updateBooking(booking.id, {
-				customer_name: booking.customer_name,
-				address: booking.address,
-				date_time: booking.date_time,
-				service_id: booking.service_id,
+			await updateBooking(id, {
+				...booking,
 				status,
 			});
-			if (onUpdateStatus) {
-				onUpdateStatus(booking.id, status);
-			} else {
-				// Refresh the page to show updated data
-				router.refresh();
-			}
+			toast.success(`Booking status updated to ${status}`);
+			onBookingChange?.();
 		} catch (error) {
 			console.error("Error updating booking status:", error);
+			toast.error("Error", {
+				description:
+					"There was a problem updating the booking status. Please try again.",
+			});
 		} finally {
 			setIsUpdating(false);
 		}
 	};
 
 	return (
-		<div className="animate-in fade-in zoom-in-95 duration-400 space-y-4">
+		<div className="space-y-4">
 			<DialogHeader>
-				<DialogTitle>Booking Details</DialogTitle>
-				<DialogDescription>
-					Complete information about this booking
+				<DialogTitle className="text-2xl font-bold text-left">
+					Booking Details
+				</DialogTitle>
+				<DialogDescription className="flex items-center justify-between text-md font-medium">
+					<span>Booking #{parseInt(booking.id.substring(0, 5), 16)}</span>
+					<Badge variant={getStatusColor(booking.status)}>
+						{booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+					</Badge>
 				</DialogDescription>
 			</DialogHeader>
-
-			{error && <div className="text-red-500">{error}</div>}
 
 			<div className="py-4 space-y-4">
 				<div className="grid grid-cols-2 gap-4">
 					<div>
-						<h3 className="text-sm font-medium text-gray-500">Service</h3>
-						<p className="mt-1 text-base font-medium">
-							{booking.service?.name || "Unknown Service"}
-						</p>
+						<h3 className="text-sm font-medium text-muted-foreground">
+							Customer
+						</h3>
+						<p className="mt-1">{booking.customer_name}</p>
 					</div>
 
 					<div>
-						<h3 className="text-sm font-medium text-gray-500">Status</h3>
-						<div className="mt-1">
-							<Badge variant={getStatusColor(booking.status)}>
-								{booking.status.charAt(0).toUpperCase() +
-									booking.status.slice(1)}
-							</Badge>
-						</div>
+						<h3 className="text-sm font-medium text-muted-foreground">
+							Service Address
+						</h3>
+						<p className="mt-1">{booking.address}</p>
 					</div>
-				</div>
-
-				<div>
-					<h3 className="text-sm font-medium text-gray-500">Customer</h3>
-					<p className="mt-1">{booking.customer_name}</p>
-				</div>
-
-				<div>
-					<h3 className="text-sm font-medium text-gray-500">Address</h3>
-					<p className="mt-1">{booking.address}</p>
 				</div>
 
 				<div className="grid grid-cols-2 gap-4">
 					<div>
-						<h3 className="text-sm font-medium text-gray-500">Date & Time</h3>
+						<h3 className="text-sm font-medium text-muted-foreground">
+							Service Date & Time
+						</h3>
 						<p className="mt-1">
 							{format(new Date(booking.date_time), "PPP p")}
 						</p>
 					</div>
 
 					<div>
-						<h3 className="text-sm font-medium text-gray-500">
+						<h3 className="text-sm font-medium text-muted-foreground">
 							Booking Created
 						</h3>
 						<p className="mt-1">
-							{format(new Date(booking.created_at), "PPP")}
+							{format(new Date(booking.created_at), "PPP p")}
 						</p>
 					</div>
 				</div>
 
-				<div>
-					<h3 className="text-sm font-medium text-gray-500">Service Details</h3>
-					<p className="mt-1">
-						{booking.service?.description || "No details available"}
-					</p>
-				</div>
-
-				<div>
-					<h3 className="text-sm font-medium text-gray-500">Price</h3>
-					<p className="mt-1 text-lg font-bold">
-						Rs. {booking.service?.price.toFixed(2) || "0.00"}
-					</p>
+				<div className="border-t pt-4">
+					<h3 className="text-sm font-medium text-muted-foreground">
+						Service Details
+					</h3>
+					<div className="mt-2 bg-muted p-4 rounded-md">
+						<div className="flex justify-between items-center">
+							<span className="text-sm font-medium">
+								{booking.service?.name}
+							</span>
+							<span className="text-md font-semibold tracking-tight">
+								Rs.{" "}
+								{typeof booking.service?.price === "number"
+									? booking.service.price.toLocaleString("en", {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+									  })
+									: "0.00"}
+							</span>
+						</div>
+						<p className="mt-1 text-xs text-muted-foreground">
+							{booking.service?.description}
+						</p>
+					</div>
 				</div>
 
 				{isAdmin &&
 					booking.status !== "cancelled" &&
 					booking.status !== "completed" && (
 						<div className="border-t pt-4 mt-4">
-							<h3 className="text-sm font-medium text-gray-500 mb-2">
+							<h3 className="text-sm font-medium text-muted-foreground mb-2">
 								Update Status
 							</h3>
-							<div className="flex gap-2">
-								{booking.status !== "pending" && (
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handleStatusChange("pending")}
-										disabled={isUpdating}
-									>
-										Mark as Pending
-									</Button>
-								)}
-								{booking.status !== "confirmed" && (
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handleStatusChange("confirmed")}
-										className="bg-green-50 text-green-700 hover:bg-green-100"
-										disabled={isUpdating}
-									>
-										Confirm
-									</Button>
-								)}
-								{booking.status === "confirmed" && (
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handleStatusChange("completed")}
-										className="bg-blue-50 text-blue-700 hover:bg-blue-100"
-										disabled={isUpdating}
-									>
-										Mark Complete
-									</Button>
-								)}
-								{(booking.status === "pending" ||
-									booking.status === "confirmed") && (
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handleStatusChange("cancelled")}
-										className="bg-red-50 text-red-700 hover:bg-red-100"
-										disabled={isUpdating}
-									>
-										Cancel
-									</Button>
-								)}
-							</div>
+							<Select
+								onValueChange={(value) =>
+									handleStatusChange(booking.id, value as Booking["status"])
+								}
+							>
+								<SelectTrigger className="w-[180px]" disabled={isUpdating}>
+									<SelectValue
+										placeholder={
+											booking.status.charAt(0).toUpperCase() +
+											booking.status.slice(1)
+										}
+									/>
+								</SelectTrigger>
+								<SelectContent>
+									<SelectGroup>
+										<SelectItem value="pending">Pending</SelectItem>
+										<SelectItem value="confirmed">Confirmed</SelectItem>
+										<SelectItem value="completed">Completed</SelectItem>
+									</SelectGroup>
+								</SelectContent>
+							</Select>
 						</div>
 					)}
 			</div>
 
 			<DialogFooter>
+				{(booking.status === "pending" || !isAdmin) && onCancel && (
+					<Button variant="destructive" onClick={onCancel}>
+						Cancel Booking
+					</Button>
+				)}
+				{(booking.status === "pending" || isAdmin) && onEdit && (
+					<Button variant="default" onClick={onEdit}>
+						Edit Booking
+					</Button>
+				)}
 				<DialogClose asChild>
 					<Button variant="outline">Close</Button>
 				</DialogClose>

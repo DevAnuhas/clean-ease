@@ -12,80 +12,94 @@ import {
 	DialogTitle,
 	DialogDescription,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import LoadingSpinner from "@/components/ui/spinner";
 import { BookingFormFields } from "./BookingFormFields";
 import type { Service, Booking } from "@/types";
-import { getServices, createBooking } from "@/lib/api-client";
+import { getServices } from "@/lib/api-client";
 import { bookingFormSchema, type BookingFormValues } from "@/lib/form-schemas";
 
 interface BookingFormProps {
-	onSuccess: (booking: Booking) => void;
+	onSubmit: (data: BookingFormValues) => Promise<void>;
+	booking?: Partial<Booking>;
 }
 
-export default function BookingForm({ onSuccess }: BookingFormProps) {
+export default function BookingForm({ onSubmit, booking }: BookingFormProps) {
 	const [services, setServices] = useState<Service[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
 
 	const form = useForm<BookingFormValues>({
 		resolver: zodResolver(bookingFormSchema),
 		defaultValues: {
-			customer_name: "",
-			address: "",
-			date_time: "",
-			service_id: "",
+			customer_name: booking?.customer_name || "",
+			address: booking?.address || "",
+			date_time: booking?.date_time || "",
+			service_id: booking?.service_id || "",
+			status: booking?.status || "pending",
 		},
 	});
 
 	useEffect(() => {
-		loadServices();
+		const fetchServices = async () => {
+			try {
+				const serviceData = await getServices();
+				setServices(serviceData);
+			} catch (error) {
+				console.error("Failed to fetch services:", error);
+				toast.error("Error", {
+					description: "Failed to load services. Please try again later.",
+				});
+			} finally {
+				setIsLoading(false);
+			}
+		};
+		fetchServices();
 	}, []);
 
-	async function loadServices() {
+	const handleSubmit = async (data: BookingFormValues) => {
 		try {
-			const services = await getServices();
-			setServices(services);
+			await onSubmit(data);
 		} catch (error) {
-			setError("Error loading data: " + error);
+			console.error("Error submitting booking:", error);
+			toast.error("Error", {
+				description: "Failed to save booking. Please try again.",
+			});
 		} finally {
 			setIsLoading(false);
 		}
-	}
-
-	async function onSubmit(data: BookingFormValues) {
-		try {
-			const booking = await createBooking({
-				...data,
-				status: "pending",
-			});
-			onSuccess(booking);
-		} catch {
-			setError("Failed to create booking");
-		}
-	}
+	};
 
 	if (isLoading) return <LoadingSpinner />;
 
 	return (
-		<div className="animate-in fade-in zoom-in-95 duration-400 space-y-4">
+		<div className="animate-in fade-in zoom-in-100 duration-400 space-y-4">
 			<DialogHeader>
-				<DialogTitle>Book a Service</DialogTitle>
+				<DialogTitle className="text-2xl font-bold">
+					{booking ? "Edit Booking Details" : "Book a Service"}
+				</DialogTitle>
 				<DialogDescription>
-					Book a service for your cleaning needs
+					{booking
+						? "Edit the details of your booking"
+						: "Book a service for your cleaning needs"}
 				</DialogDescription>
 			</DialogHeader>
 
-			{error && <div className="text-red-500">{error}</div>}
-
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+				<form
+					onSubmit={form.handleSubmit(handleSubmit)}
+					className="py-4 space-y-4"
+				>
 					<BookingFormFields form={form} services={services} />
 					<DialogFooter className="flex justify-end gap-2 pt-4">
 						<DialogClose asChild>
 							<Button variant="outline">Cancel</Button>
 						</DialogClose>
 						<Button type="submit" disabled={form.formState.isSubmitting}>
-							{form.formState.isSubmitting ? "Booking..." : "Book Service"}
+							{form.formState.isSubmitting
+								? "Submitting..."
+								: booking
+								? "Save Changes"
+								: "Book Service"}
 						</Button>
 					</DialogFooter>
 				</form>
