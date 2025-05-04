@@ -45,49 +45,6 @@ export default function Dashboard() {
 		};
 
 		checkSession();
-
-		// Set up subscription for real-time updates
-		const setupRealtimeSubscription = async () => {
-			const { data: authData } = await supabase.auth.getSession();
-			if (!authData.session) return;
-
-			const userId = authData.session.user.id;
-
-			const subscription = supabase
-				.channel("booking-changes")
-				.on(
-					"postgres_changes",
-					{
-						event: "*",
-						schema: "public",
-						table: "bookings",
-						filter: `user_id=eq.${userId}`,
-					},
-					() => {
-						// Reload bookings when changes are detected
-						fetchBookings();
-					}
-				)
-				.subscribe();
-
-			return subscription;
-		};
-
-		const initialize = async () => {
-			await checkSession();
-			const subscription = await setupRealtimeSubscription();
-
-			return () => {
-				if (subscription) {
-					supabase.removeChannel(subscription);
-				}
-			};
-		};
-
-		const cleanup = initialize();
-		return () => {
-			cleanup.then((cleanupFn) => cleanupFn());
-		};
 	}, []);
 
 	const fetchBookings = async () => {
@@ -98,7 +55,7 @@ export default function Dashboard() {
 		} catch (error) {
 			console.error("Error fetching bookings:", error);
 			toast.error("Error", {
-				description: "Failed to load your bookings. Please try again.",
+				description: "Failed to load bookings. Please try again.",
 			});
 		} finally {
 			setIsLoading(false);

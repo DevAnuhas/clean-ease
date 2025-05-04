@@ -13,17 +13,23 @@ async function getBooking(
 	const { id } = await Promise.resolve(context.params);
 	const supabase = await createClient();
 
-	const userId = req.headers.get("x-user-id");
-	if (userId === null) {
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) {
 		throw new ForbiddenError("User not authenticated");
 	}
 
-	const { data, error } = await supabase
-		.from("bookings")
-		.select("*, services(*)")
-		.eq("id", id)
-		.eq("user_id", userId)
-		.single();
+	const isAdmin = user.app_metadata?.role === "admin";
+
+	let query = supabase.from("bookings").select("*, services(*)").eq("id", id);
+
+	if (!isAdmin) {
+		query = query.eq("user_id", user.id);
+	}
+
+	const { data, error } = await query.single();
 
 	if (error) {
 		if (error.code === "PGRST116") {
@@ -41,9 +47,18 @@ async function updateBooking(
 	context: { params: { id: string } }
 ) {
 	const { id } = await Promise.resolve(context.params);
-	const userId = req.headers.get("x-user-id");
 	const bookingData = await validateRequest(req, bookingSchema);
 	const supabase = await createClient();
+
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) {
+		throw new ForbiddenError("User not authenticated");
+	}
+
+	const isAdmin = user.app_metadata?.role === "admin";
 
 	// Check if the booking exists and belongs to the user
 	const { data: existingBooking, error: fetchError } = await supabase
@@ -56,7 +71,7 @@ async function updateBooking(
 		throw new NotFoundError("Booking not found");
 	}
 
-	if (existingBooking.user_id !== userId) {
+	if (!isAdmin && existingBooking.user_id !== user.id) {
 		throw new ForbiddenError(
 			"You do not have permission to update this booking"
 		);
@@ -83,8 +98,17 @@ async function deleteBooking(
 	context: { params: { id: string } }
 ) {
 	const { id } = await Promise.resolve(context.params);
-	const userId = req.headers.get("x-user-id");
 	const supabase = await createClient();
+
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) {
+		throw new ForbiddenError("User not authenticated");
+	}
+
+	const isAdmin = user.app_metadata?.role === "admin";
 
 	// Check if the booking exists and belongs to the user
 	const { data: existingBooking, error: fetchError } = await supabase
@@ -97,7 +121,7 @@ async function deleteBooking(
 		throw new NotFoundError("Booking not found");
 	}
 
-	if (existingBooking.user_id !== userId) {
+	if (!isAdmin && existingBooking.user_id !== user.id) {
 		throw new ForbiddenError(
 			"You do not have permission to delete this booking"
 		);
