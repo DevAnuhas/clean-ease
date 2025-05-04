@@ -6,18 +6,26 @@ import { withErrorHandler, withAuth } from "@/middleware/error-handler";
 import { DatabaseError, ForbiddenError, NotFoundError } from "@/lib/errors";
 
 // GET /api/bookings - Get all bookings for the authenticated user
-async function getBookings(req: NextRequest) {
+async function getBookings() {
 	const supabase = await createClient();
 
-	const userId = req.headers.get("x-user-id");
-	if (userId === null) {
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) {
 		throw new ForbiddenError("User not authenticated");
 	}
 
-	const { data, error } = await supabase
-		.from("bookings")
-		.select("*, service:service_id(*)")
-		.eq("user_id", userId);
+	const isAdmin = user?.app_metadata?.role === "admin";
+
+	let query = supabase.from("bookings").select("*, service:service_id(*)");
+
+	if (!isAdmin) {
+		query = query.eq("user_id", user.id);
+	}
+
+	const { data, error } = await query;
 
 	if (error) {
 		throw new DatabaseError(error.message);
@@ -29,13 +37,15 @@ async function getBookings(req: NextRequest) {
 // POST /api/bookings - Create a new booking
 async function createBooking(req: NextRequest) {
 	const bookingData = await validateRequest(req, bookingSchema);
+	const supabase = await createClient();
 
-	const userId = req.headers.get("x-user-id");
-	if (userId === null) {
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) {
 		throw new ForbiddenError("User not authenticated");
 	}
-
-	const supabase = await createClient();
 
 	// Check if the service exists
 	const { data: serviceExists, error: serviceError } = await supabase
@@ -53,7 +63,7 @@ async function createBooking(req: NextRequest) {
 		.from("bookings")
 		.insert({
 			...bookingData,
-			user_id: userId,
+			user_id: user.id,
 			status: bookingData.status || "pending",
 		})
 		.select()

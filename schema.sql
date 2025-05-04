@@ -43,7 +43,7 @@ USING (auth.jwt() ->> 'role' = 'admin');
 -- Create policies for bookings table
 CREATE POLICY "Users can view their own bookings" 
 ON public.bookings FOR SELECT 
-USING (auth.uid() = user_id OR auth.jwt() ->> 'role' = 'admin');
+USING (auth.uid() = user_id) OR (auth.jwt() -> 'app_metadata' ->> 'role'::text) = 'admin'::text
 
 CREATE POLICY "Users can create their own bookings" 
 ON public.bookings FOR INSERT 
@@ -51,11 +51,11 @@ WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own bookings" 
 ON public.bookings FOR UPDATE 
-USING (auth.uid() = user_id OR auth.jwt() ->> 'role' = 'admin');
+USING (auth.uid() = user_id) OR (auth.jwt() -> 'app_metadata' ->> 'role'::text) = 'admin'::text
 
 CREATE POLICY "Users can delete their own bookings" 
 ON public.bookings FOR DELETE 
-USING (auth.uid() = user_id OR auth.jwt() ->> 'role' = 'admin');
+USING (auth.uid() = user_id) OR (auth.jwt() -> 'app_metadata' ->> 'role'::text) = 'admin'::text
 
 -- Insert some initial service data
 INSERT INTO public.services (name, description, price) VALUES
